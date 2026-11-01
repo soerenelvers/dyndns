@@ -18,6 +18,8 @@ export function createApp({ config, db, provider, auth = createAuth(config) }) {
   // Only the reverse proxy on this machine may supply forwarding headers.
   app.set('trust proxy', 'loopback');
   app.use(helmet({ strictTransportSecurity: config.production ? undefined : false,
+    // no-referrer makes browser form POST origins opaque ("null"), failing CSRF validation.
+    referrerPolicy: { policy: 'same-origin' },
     contentSecurityPolicy: { directives: { 'upgrade-insecure-requests': config.production ? [] : null } } }));
   app.use((req, res, next) => {
     res.set('Cache-Control', 'no-store');

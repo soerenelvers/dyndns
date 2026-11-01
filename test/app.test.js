@@ -46,9 +46,11 @@ test('requests require authorization, owner scope, CSRF, and valid host labels',
   const f = await fixture(t);
   const browser = f.browser();
   const page = await browser('/');
+  assert.equal(page.response.headers.get('referrer-policy'), 'same-origin', 'native browser POSTs must retain their same-origin Origin header');
   assert.equal((await browser('/hosts', { form: { label: 'hack' } })).status, 403);
   assert.equal((await browser('/hosts', { form: { label: 'hack', csrf: csrf(page.text) } })).status, 401);
   const antiCsrf = await login(browser);
+  assert.equal((await browser('/hosts', { headers: { Origin: f.config.appUrl }, form: { csrf: antiCsrf, label: 'browser-form' } })).status, 200);
   for (const label of ['a.b', '-bad', 'UPPER', '<script>', 'x'.repeat(64)]) {
     assert.equal((await browser('/hosts', { form: { csrf: antiCsrf, label } })).status, 400);
   }
